@@ -109,7 +109,7 @@ bool CMD2Model::LoadModel( const char *filename )
 	num_xyz		= header.num_xyz;
 	num_glcmds	= header.num_glcmds;
 
-	std::cout << header.num_frames << std::endl;
+	std::cout << header.ofs_end << std::endl;
 
 	// allocate memory
 	m_vertices		= new vec3_t[ num_xyz * num_frames ];
