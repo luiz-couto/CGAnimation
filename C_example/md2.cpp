@@ -109,7 +109,7 @@ bool CMD2Model::LoadModel( const char *filename )
 	num_xyz		= header.num_xyz;
 	num_glcmds	= header.num_glcmds;
 
-	std::cout << header.ofs_end << std::endl;
+	
 
 	// allocate memory
 	m_vertices		= new vec3_t[ num_xyz * num_frames ];
@@ -124,6 +124,8 @@ bool CMD2Model::LoadModel( const char *filename )
 	// read frame data...
 	file.seekg( header.ofs_frames, std::ios::beg );
 	file.read( (char *)buffer, num_frames * header.framesize );
+	
+	std::cout << buffer << std::endl;
 
 	// read opengl commands...
 	file.seekg( header.ofs_glcmds, std::ios::beg );

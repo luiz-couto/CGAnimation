@@ -1,5 +1,17 @@
 from OpenGL.GL import *
 
+m_vertices      = 0
+m_glcmds        = 0
+m_lightnormals  = 0
+
+num_frames      = 0
+num_xyz         = 0
+num_glcmds      = 0
+
+m_texid         = 0
+m_scale         = 1.0
+
+
 class md2_t:
     def __init__(self,content):
         self.ident = int.from_bytes(content[0:4],"little")
@@ -37,11 +49,18 @@ def LoadModel(filename):
         print("It's not a .md2 file!")
         return
 
+    # Read header file
     header_content = content[0:69]
     header = md2_t(header_content)
     
+    # Initialize member variables
+    num_frames = header.num_frames
+    num_xyz = header.num_xyz
+    num_glcmds = header.num_glcmds
 
-
+    # Read file data
+    buffer = content[header.ofs_frames:num_frames*header.framesize]
+    m_glcmds = content[header.ofs_glcmds:num_glcmds*4]
 
 def main():
     LoadModel("Weapon.md2")
