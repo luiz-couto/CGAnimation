@@ -2,9 +2,9 @@ from OpenGL.GL import *
 import sys
 import struct
 
-m_vertices      = 0
+m_vertices      = []
 m_glcmds        = 0
-m_lightnormals  = 0
+m_lightnormals  = []
 
 num_frames      = 0
 num_xyz         = 0
@@ -81,8 +81,24 @@ def LoadModel(filename):
     buffer = content[header.ofs_frames:header.ofs_frames+(num_frames*header.framesize)]
     m_glcmds = content[header.ofs_glcmds:header.ofs_glcmds+num_glcmds*4]
     
+    
+    w,h = 3,num_frames
+    
+    global m_vertices
+    global m_lightnormals
+
     frame = frame_t(buffer[header.framesize * 0:])
-    print(frame.verts[5].v)
+    print(float(frame.scale[0][0])*frame.verts[0].v[0])
+    
+   
+    for j in range(0,num_frames):
+        frame = frame_t(buffer[header.framesize * j:])
+        for i in range(0,num_xyz):
+            m_vertices.append([((frame.verts[i].v[0] * frame.scale[0]) + frame.translate[0]),((frame.verts[i].v[1] * frame.scale[1]) + frame.translate[1]),((frame.verts[i].v[2] * frame.scale[2]) + frame.translate[2])])
+            m_lightnormals.append(frame.verts[i].lightnormalindex)
+            
+    #print(m_vertices[0][0])
+    #print(frame.verts[5].v)
 
 def main():
     LoadModel("Weapon.md2")

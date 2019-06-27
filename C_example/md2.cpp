@@ -134,8 +134,7 @@ bool CMD2Model::LoadModel( const char *filename )
 	/////////////////////////////////////////////
 
 	frame_t *test = (frame_t *)&buffer[ header.framesize * 0 ];
-	std::cout << test->verts[0].lightnormalindex << std::endl;
-
+	
 	// vertex array initialization
 	for( int j = 0; j < num_frames; j++ )
 	{
@@ -153,6 +152,10 @@ bool CMD2Model::LoadModel( const char *filename )
 			ptrnormals[i] = frame->verts[i].lightnormalindex;
 		}
 	}
+
+	frame		= (frame_t *)&buffer[ header.framesize * 0 ];
+	std::cout << frame->verts[0].v[0] * frame->scale[0] << std::endl;
+
 
 
 	// free buffer's memory
