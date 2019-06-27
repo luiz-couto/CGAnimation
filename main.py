@@ -4,6 +4,11 @@ import struct
 from PIL import Image
 import numpy
 
+NUMVERTEXNORMALS = 162
+SHADEOUT_QUANT = 16
+anorms = []
+anorms_dots = []
+
 m_vertices      = []
 m_glcmds        = 0
 m_lightnormals  = []
@@ -140,9 +145,33 @@ def LoadSkin(filename):
     image.close()
     return textureID
 
+def DrawModel(time):
+    glPushMatrix()
+    
+    glRotatef(-90.0, 1.0, 0.0, 0.0)
+    glRotatef(-90.0, 0.0, 0.0, 1.0)
+
+    RenderFrame()
+    glPopMatrix()
+
+def Interpolate(vertlist):
+    for i in range(0,num_xyz):
+        vertlist[i][0] = m_vertices[ i + (num_xyz * m_anim.curr_frame) ][0] * m_scale
+        vertlist[i][1] = m_vertices[ i + (num_xyz * m_anim.curr_frame) ][1] * m_scale
+        vertlist[i][2] = m_vertices[ i + (num_xyz * m_anim.curr_frame) ][2] * m_scale
+
+def PopulateAnorms(filename):
+    f = open(filename,"r")
+    content = f.readlines()
+    global anorms
+    for i in range(0,NUMVERTEXNORMALS):
+        anorms.append([float(content[i][2:11]),float(content[i][14:23]),float(content[i][26:35])])
+
 def main():
     LoadModel("Weapon.md2")
     global m_texid
     m_texid = LoadSkin("Weapon.pcx")
+    PopulateAnorms("anorms.txt")
+    print(anorms)
     
 main()
