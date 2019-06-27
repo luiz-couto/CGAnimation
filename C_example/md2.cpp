@@ -134,7 +134,7 @@ bool CMD2Model::LoadModel( const char *filename )
 	/////////////////////////////////////////////
 
 	frame_t *test = (frame_t *)&buffer[ header.framesize * 0 ];
-	std::cout << test->scale[2] << std::endl;
+	std::cout << test->name << std::endl;
 
 	// vertex array initialization
 	for( int j = 0; j < num_frames; j++ )

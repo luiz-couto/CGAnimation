@@ -37,11 +37,13 @@ class md2_t:
         self.ofs_glcmds = int.from_bytes(content[60:64],"little")
         self.ofs_end = int.from_bytes(content[64:68],"little")
 
+
+
 class frame_t:
     def __init__(self,content):
         self.scale = [struct.unpack('f',content[0:4]),struct.unpack('f',content[4:8]),struct.unpack('f',content[8:12])]
-
-
+        self.translate = [struct.unpack('f',content[12:16]),struct.unpack('f',content[16:20]),struct.unpack('f',content[20:24])]
+        self.name = content[24:40].decode("utf-8")
 
 def LoadModel(filename):
    
@@ -66,8 +68,9 @@ def LoadModel(filename):
     #buffer = content[header.ofs_frames:num_frames*header.framesize]
     buffer = content[header.ofs_frames:header.ofs_frames+(num_frames*header.framesize)]
     m_glcmds = content[header.ofs_glcmds:header.ofs_glcmds+num_glcmds*4]
+    
     frame = frame_t(buffer[header.framesize * 0:])
-    print(frame.scale)
+    print(frame.name)
 
 def main():
     LoadModel("Weapon.md2")
