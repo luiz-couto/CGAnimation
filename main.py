@@ -1,4 +1,6 @@
 from OpenGL.GL import *
+import sys
+import struct
 
 m_vertices      = 0
 m_glcmds        = 0
@@ -35,7 +37,9 @@ class md2_t:
         self.ofs_glcmds = int.from_bytes(content[60:64],"little")
         self.ofs_end = int.from_bytes(content[64:68],"little")
 
-
+class frame_t:
+    def __init__(self,content):
+        self.scale = [struct.unpack('f',content[0:4]),struct.unpack('f',content[4:8]),struct.unpack('f',content[8:12])]
 
 
 
@@ -59,8 +63,11 @@ def LoadModel(filename):
     num_glcmds = header.num_glcmds
 
     # Read file data
-    buffer = content[header.ofs_frames:num_frames*header.framesize]
-    m_glcmds = content[header.ofs_glcmds:num_glcmds*4]
+    #buffer = content[header.ofs_frames:num_frames*header.framesize]
+    buffer = content[header.ofs_frames:header.ofs_frames+(num_frames*header.framesize)]
+    m_glcmds = content[header.ofs_glcmds:header.ofs_glcmds+num_glcmds*4]
+    frame = frame_t(buffer[header.framesize * 0:])
+    print(frame.scale)
 
 def main():
     LoadModel("Weapon.md2")

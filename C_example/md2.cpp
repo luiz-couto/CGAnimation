@@ -125,7 +125,7 @@ bool CMD2Model::LoadModel( const char *filename )
 	file.seekg( header.ofs_frames, std::ios::beg );
 	file.read( (char *)buffer, num_frames * header.framesize );
 	
-	std::cout << buffer << std::endl;
+	//std::cout << header.framesize << std::endl;
 
 	// read opengl commands...
 	file.seekg( header.ofs_glcmds, std::ios::beg );
@@ -133,6 +133,8 @@ bool CMD2Model::LoadModel( const char *filename )
 
 	/////////////////////////////////////////////
 
+	frame_t *test = (frame_t *)&buffer[ header.framesize * 0 ];
+	std::cout << test->scale[2] << std::endl;
 
 	// vertex array initialization
 	for( int j = 0; j < num_frames; j++ )
