@@ -37,13 +37,22 @@ class md2_t:
         self.ofs_glcmds = int.from_bytes(content[60:64],"little")
         self.ofs_end = int.from_bytes(content[64:68],"little")
 
-
+class vertex_t:
+    def __init__(self,content):
+        self.v = [content[0],content[1],content[2]]
+        self.lightnormalindex = content[3]
 
 class frame_t:
     def __init__(self,content):
         self.scale = [struct.unpack('f',content[0:4]),struct.unpack('f',content[4:8]),struct.unpack('f',content[8:12])]
         self.translate = [struct.unpack('f',content[12:16]),struct.unpack('f',content[16:20]),struct.unpack('f',content[20:24])]
         self.name = content[24:40].decode("utf-8")
+        self.verts = []
+        aux = 40
+        for i in range(num_xyz):
+            vertex = vertex_t(content[aux:aux+4])
+            self.verts.append(vertex)
+            aux = aux + 4
 
 def LoadModel(filename):
    
@@ -60,6 +69,9 @@ def LoadModel(filename):
     header = md2_t(header_content)
     
     # Initialize member variables
+    global num_xyz
+    global num_frames
+    global num_glcmds
     num_frames = header.num_frames
     num_xyz = header.num_xyz
     num_glcmds = header.num_glcmds
@@ -70,7 +82,7 @@ def LoadModel(filename):
     m_glcmds = content[header.ofs_glcmds:header.ofs_glcmds+num_glcmds*4]
     
     frame = frame_t(buffer[header.framesize * 0:])
-    print(frame.name)
+    print(frame.verts[5].v)
 
 def main():
     LoadModel("Weapon.md2")
