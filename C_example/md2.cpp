@@ -154,7 +154,7 @@ bool CMD2Model::LoadModel( const char *filename )
 	}
 
 	frame		= (frame_t *)&buffer[ header.framesize * 0 ];
-	std::cout << frame->verts[0].v[0] * frame->scale[0] << std::endl;
+	std::cout << m_vertices[78][0] << std::endl;
 
 
 

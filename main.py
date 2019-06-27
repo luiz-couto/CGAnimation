@@ -100,7 +100,7 @@ def LoadModel(filename):
     global m_lightnormals
 
     frame = frame_t(buffer[header.framesize * 0:])
-    print(float(frame.scale[0])*frame.verts[0].v[0] + frame.translate[0])
+    #print(float(frame.scale[0])*frame.verts[0].v[0] + frame.translate[0])
     
    
     for j in range(0,num_frames):
@@ -109,7 +109,7 @@ def LoadModel(filename):
             m_vertices.append([((frame.verts[i].v[0] * frame.scale[0]) + frame.translate[0]),((frame.verts[i].v[1] * frame.scale[1]) + frame.translate[1]),((frame.verts[i].v[2] * frame.scale[2]) + frame.translate[2])])
             m_lightnormals.append(frame.verts[i].lightnormalindex)
             
-    print(m_vertices[0][0])
+    print(m_vertices[78][0])
     #print(frame.verts[5].v)
 
 def main():
