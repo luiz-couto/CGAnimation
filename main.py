@@ -44,8 +44,20 @@ class vertex_t:
 
 class frame_t:
     def __init__(self,content):
-        self.scale = [struct.unpack('f',content[0:4]),struct.unpack('f',content[4:8]),struct.unpack('f',content[8:12])]
-        self.translate = [struct.unpack('f',content[12:16]),struct.unpack('f',content[16:20]),struct.unpack('f',content[20:24])]
+        x = struct.unpack('f',content[0:4])
+        x = float(x[0])
+        y = struct.unpack('f',content[4:8])
+        y = float(y[0])
+        z = struct.unpack('f',content[8:12])
+        z = float(z[0])
+        self.scale = [x,y,z]
+        x = struct.unpack('f',content[12:16])
+        x = float(x[0])
+        y = struct.unpack('f',content[16:20])
+        y = float(y[0])
+        z = struct.unpack('f',content[20:24])
+        z = float(z[0])
+        self.translate = [x,y,z]
         self.name = content[24:40].decode("utf-8")
         self.verts = []
         aux = 40
@@ -88,7 +100,7 @@ def LoadModel(filename):
     global m_lightnormals
 
     frame = frame_t(buffer[header.framesize * 0:])
-    print(float(frame.scale[0][0])*frame.verts[0].v[0])
+    print(float(frame.scale[0])*frame.verts[0].v[0] + frame.translate[0])
     
    
     for j in range(0,num_frames):
@@ -97,7 +109,7 @@ def LoadModel(filename):
             m_vertices.append([((frame.verts[i].v[0] * frame.scale[0]) + frame.translate[0]),((frame.verts[i].v[1] * frame.scale[1]) + frame.translate[1]),((frame.verts[i].v[2] * frame.scale[2]) + frame.translate[2])])
             m_lightnormals.append(frame.verts[i].lightnormalindex)
             
-    #print(m_vertices[0][0])
+    print(m_vertices[0][0])
     #print(frame.verts[5].v)
 
 def main():
