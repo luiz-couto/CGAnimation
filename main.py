@@ -189,6 +189,12 @@ def PopulateAnormsDots(filename):
         anorms_dots.append(y)
         
 
+g_lightcolor = [1.0,1.0,1.0]
+g_ambientlight = 32
+g_shadelight = 128
+g_angle = 0.0
+
+
     
 
 
