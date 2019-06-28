@@ -3,6 +3,8 @@ import sys
 import struct
 from PIL import Image
 import numpy
+import re
+
 
 NUMVERTEXNORMALS = 162
 SHADEOUT_QUANT = 16
@@ -167,11 +169,34 @@ def PopulateAnorms(filename):
     for i in range(0,NUMVERTEXNORMALS):
         anorms.append([float(content[i][2:11]),float(content[i][14:23]),float(content[i][26:35])])
 
+def PopulateAnormsDots(filename):
+    f = open(filename,"r")
+    content = f.read()
+    global anorms_dots
+    #anorms_dots = re.split('{ | } ',content)
+    aux = content.split('\n')
+
+    for j in range(0,SHADEOUT_QUANT):
+        aux[j] = aux[j].replace('{ ','')
+        aux[j] = aux[j].replace(' }','')
+        aux[j] = aux[j].replace(', ','')
+        k = 0
+        y = [] # auxiliar
+        for i in range(0,256):
+            x = float(aux[j][k:k+4])
+            y.append(x)
+            k = k+4
+        anorms_dots.append(y)
+        
+
+    
+
+
 def main():
     LoadModel("Weapon.md2")
     global m_texid
     m_texid = LoadSkin("Weapon.pcx")
     PopulateAnorms("anorms.txt")
-    print(anorms)
+    PopulateAnormsDots("anormtab.txt")
     
 main()
