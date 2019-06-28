@@ -193,8 +193,18 @@ g_lightcolor = [1.0,1.0,1.0]
 g_ambientlight = 32
 g_shadelight = 128
 g_angle = 0.0
+lcolor = [0,0,0]
+shadedots = anorms_dots[0:]
 
+def ProcessLighting():
+    lightvar = (g_shadelight + g_ambientlight)/256.0
 
+    lcolor[0] = (g_lightcolor[0]*lightvar)
+    lcolor[1] = (g_lightcolor[1]*lightvar)
+    lcolor[2] = (g_lightcolor[2]*lightvar)
+
+    global shadedots
+    shadedots = anorms_dots[(g_angle * (SHADEOUT_QUANT / 360.0)) & (SHADEOUT_QUANT - 1):]
     
 
 
