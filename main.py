@@ -5,6 +5,12 @@ from PIL import Image
 import numpy
 import re
 
+import OpenGL.GL.shaders
+import glfw
+import glm
+from OpenGL.GLU import *
+from OpenGL.GLUT import *
+
 
 NUMVERTEXNORMALS = 162
 SHADEOUT_QUANT = 16
@@ -15,6 +21,9 @@ anorms_dots = []
 m_vertices      = []
 m_glcmds        = []
 m_lightnormals  = []
+
+m_currentTime = 0
+m_lastTime = 0
 
 num_frames      = 0
 num_xyz         = 0
@@ -128,8 +137,7 @@ def LoadModel(filename):
     buffer = content[header.ofs_frames:header.ofs_frames+(num_frames*header.framesize)]
     global m_glcmds
     m_glcmds = content[header.ofs_glcmds:header.ofs_glcmds+num_glcmds*4]
-    
-    
+  
     w,h = 3,num_frames
     
     global m_vertices
@@ -191,10 +199,14 @@ def Interpolate(vertlist):
     curr_v = m_vertices[num_xyz * m_anim.curr_frame:]
     next_v = m_vertices[num_xyz * m_anim.next_frame:]
 
+    #for i in range(0,num_xyz):
+       #vertlist[i][0] = (curr_v[i][0] + m_anim.interpol * (next_v[i][0] - curr_v[i][0])) * m_scale
+       #vertlist[i][1] = (curr_v[i][1] + m_anim.interpol * (next_v[i][1] - curr_v[i][1])) * m_scale
+       #vertlist[i][2] = (curr_v[i][2] + m_anim.interpol * (next_v[i][2] - curr_v[i][2])) * m_scale
+
     for i in range(0,num_xyz):
-        vertlist[i][0] = (curr_v[i][0] + m_anim.interpol * (next_v[i][0] - curr_v[i][0])) * m_scale
-        vertlist[i][1] = (curr_v[i][1] + m_anim.interpol * (next_v[i][1] - curr_v[i][1])) * m_scale
-        vertlist[i][2] = (curr_v[i][2] + m_anim.interpol * (next_v[i][2] - curr_v[i][2])) * m_scale
+        vertlist.append([(curr_v[i][0] + m_anim.interpol * (next_v[i][0] - curr_v[i][0])) * m_scale,(curr_v[i][1] + m_anim.interpol * (next_v[i][1] - curr_v[i][1])) * m_scale,(curr_v[i][2] + m_anim.interpol * (next_v[i][2] - curr_v[i][2])) * m_scale])
+
 
     return vertlist
 
@@ -274,7 +286,8 @@ def RenderFrame():
         for j in m_glcmds:
             if(i<=0):
                 break
-            l = shadedots[m_lightnormals[m_glcmds[k+2]]]
+            
+            l = shadedots[0][m_lightnormals[m_glcmds[k+2]]]
 
             glColor3f( l * lcolor[0], l * lcolor[1], l * lcolor[2] )
 
@@ -282,6 +295,7 @@ def RenderFrame():
 
             glNormal3fv(anorms[m_lightnormals[m_glcmds[k+2]]])
 
+            print((m_glcmds))
             glVertex3fv(vertlist[m_glcmds[k+2]])
 
             k = k + 3
@@ -292,7 +306,7 @@ def RenderFrame():
     glDisable(GL_CULL_FACE)
     glPopAttrib()
 
-def animlist():
+def PopulateAnimlist():
     global animlist
     animlist = [
         anim_t(0,39,9),
@@ -368,14 +382,137 @@ def DrawFrame(frame):
     DrawModel( 1.0 )
 
 
+def GetTimeMSec():
+    return glutGet( GLUT_ELAPSED_TIME )
 
-def main():
+def GetTime():
+    return m_currentTime
+
+def GetFps():
+    return float(1000.0)/(float(m_currentTime - m_lastTime))
+
+def InitializeTime():
+    global m_currentTime
+    m_currentTime = GetTimeMSec()
+
+
+def UpdateTime():
+    global m_currentTime
+    global m_lastTime
+    m_lastTime = m_currentTime
+    m_currentTime = GetTimeMSec()
+
+    
+bAnimated = False
+g_angle = 0.0
+angle = 0.0
+bTextured = True
+bLighGL	= False
+
+
+def Display():
+    
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    glLoadIdentity()
+    UpdateTime()
+    timesec = GetTimeMSec()/1000.0
+
+    global g_angle
+    global angle
+
+    if(g_angle > 360.0):
+        g_angle = g_angle-360.0
+    
+    if(g_angle < 0):
+        g_angle = g_angle+360.0
+    
+    if(angle < 0.0):
+        angle = angle+360.0
+    
+    if(angle > 360.0):
+        angle = angle-360.0
+    
+    glTranslatef(0.0,0.0,-25.0)
+    glRotatef(angle,0.0,1.0,0.0)
+
+    if(bAnimated == True):
+        DrawModel(timesec)
+    else:
+        DrawModel(0.0)
+    
+    glutSwapBuffers()
+    glutPostRedisplay()
+
+def Reshape(width,height):
+    #prevent division by zero
+	if( height == 0 ):
+		height = 1
+
+	glViewport( 0, 0, width, height )
+
+	#reset projection matrix
+	glMatrixMode( GL_PROJECTION )
+	glLoadIdentity()
+	gluPerspective( 45.0, float(width)/float(height), 0.1, 100.0 )
+
+	#reset model/view matrix
+	glMatrixMode( GL_MODELVIEW )
+	glLoadIdentity()
+
+def Init():
+    
+    glClearColor(0.0,0.0,0.0,0.0)
+    glShadeModel(GL_SMOOTH)
+    glEnable(GL_DEPTH_TEST)
+    glEnable(GL_TEXTURE_2D)
+ 
+    InitializeTime()
     LoadModel("Weapon.md2")
     global m_texid
     m_texid = LoadSkin("Weapon.pcx")
     PopulateAnorms("anorms.txt")
     PopulateAnormsDots("anormtab.txt")
+    PopulateAnimlist()
+
+    SetAnim( 0 )
+    glDisable(GL_LIGHTING)
+    glEnable(GL_LIGHT0)
+    #ScaleModel(0.25) < --- DONT FORGET
     
+    lightpos = (10.0,10.0,100.0)
+    lightcolor = (1.0,1.0,1.0,1.0)
+
+    glLightfv( GL_LIGHT0, GL_POSITION, lightpos )
+    glLightfv( GL_LIGHT0, GL_DIFFUSE, lightcolor )
+    glLightfv( GL_LIGHT0, GL_SPECULAR, lightcolor )
+
+
+
+
+def _main():
+    LoadModel("Weapon.md2")
+    global m_texid
+    m_texid = LoadSkin("Weapon.pcx")
+    PopulateAnorms("anorms.txt")
+    PopulateAnormsDots("anormtab.txt")
+
+def main():
     
+    glutInit(sys.argv)
+    glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH )
+
+    glutInitWindowSize( 640, 480 )
+
+    glutInitWindowPosition( 100, 100 )
+
+    glutCreateWindow( "CG Animation" )
+
+    Init()
+
+    glutReshapeFunc( Reshape )
+    glutDisplayFunc( Display )
+
+    glutMainLoop()
+
     
 main()
