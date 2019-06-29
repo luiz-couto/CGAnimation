@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 
+
 #include	<GL/glut.h>
 #include	<fstream>
 
@@ -154,7 +155,7 @@ bool CMD2Model::LoadModel( const char *filename )
 	}
 
 	frame		= (frame_t *)&buffer[ header.framesize * 0 ];
-	std::cout << m_vertices[78][0] << std::endl;
+	std::cout << m_glcmds[2] << std::endl;
 
 
 
@@ -164,4 +165,74 @@ bool CMD2Model::LoadModel( const char *filename )
 	// close the file and return
 	file.close();
 	return true;
+}
+
+void CMD2Model::DrawFrame( int frame )
+{
+	static vec3_t	vertlist[ MAX_MD2_VERTS ];	// interpolated vertices
+	int				*ptricmds = m_glcmds;		// pointer on gl commands
+
+
+	// reverse the orientation of front-facing
+	// polygons because gl command list's triangles
+	// have clockwise winding
+	//glPushAttrib( GL_POLYGON_BIT );
+	//glFrontFace( GL_CW );
+
+	// enable backface culling
+	//glEnable( GL_CULL_FACE );
+	//glCullFace( GL_BACK );
+
+
+	// process lighting
+	//ProcessLighting();
+
+	// interpolate
+	//Interpolate( vertlist );
+
+	// bind model's texture
+	//glBindTexture( GL_TEXTURE_2D, m_texid );
+
+
+	// draw each triangle!
+	while( int i = *(ptricmds++) )
+	{
+		if( i < 0 )
+		{
+			//glBegin( GL_TRIANGLE_FAN );
+			i = -i;
+		}
+		else
+		{
+			//glBegin( GL_TRIANGLE_STRIP );
+		}
+
+
+		for( /* nothing */; i > 0; i--, ptricmds += 3 )
+		{
+			// ptricmds[0] : texture coordinate s
+			// ptricmds[1] : texture coordinate t
+			// ptricmds[2] : vertex index to render
+
+			//float l = shadedots[ m_lightnormals[ ptricmds[2] ] ];
+
+			// set the lighting color
+			//glColor3f( l * lcolor[0], l * lcolor[1], l * lcolor[2] );
+
+			// parse texture coordinates
+			//glTexCoord2f( ((float *)ptricmds)[0], ((float *)ptricmds)[1] );
+
+			// parse triangle's normal (for the lighting)
+			// >>> only needed if using OpenGL lighting
+			//glNormal3fv( anorms[ m_lightnormals[ ptricmds[2] ] ] );
+
+			// draw the vertex
+			std::cout << ptricmds[2]  << std::endl;
+		}
+
+		//glEnd();
+	}
+
+	//glDisable( GL_CULL_FACE );
+	//glPopAttrib();
 }

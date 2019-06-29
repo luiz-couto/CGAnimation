@@ -143,9 +143,10 @@ def LoadModel(filename):
     global m_vertices
     global m_lightnormals
 
-    frame = frame_t(buffer[header.framesize * 0:])
-    #print(float(frame.scale[0])*frame.verts[0].v[0] + frame.translate[0])
     
+    #frame = frame_t(buffer[header.framesize * 0:])
+    #print(float(frame.scale[0])*frame.verts[0].v[0] + frame.translate[0])
+   
    
     for j in range(0,num_frames):
         frame = frame_t(buffer[header.framesize * j:])
@@ -153,7 +154,7 @@ def LoadModel(filename):
             m_vertices.append([((frame.verts[i].v[0] * frame.scale[0]) + frame.translate[0]),((frame.verts[i].v[1] * frame.scale[1]) + frame.translate[1]),((frame.verts[i].v[2] * frame.scale[2]) + frame.translate[2])])
             m_lightnormals.append(frame.verts[i].lightnormalindex)
             
-    print(m_vertices[78][0])
+    #print(m_vertices[78][0])
     #print(frame.verts[5].v)
 
 def LoadSkin(filename):
@@ -274,29 +275,38 @@ def RenderFrame():
 
     glBindTexture(GL_TEXTURE_2D,m_texid)
 
-    k = 0
-    for i in m_glcmds:
+    c = 0
+    aux = []
+    for d in range(int(len(m_glcmds)/4)):
+        aux.append(int.from_bytes(m_glcmds[c:c+4],"little"))
+        c = c+4
+
+
+    k = 1
+    for i in aux:
         if(i < 0):
             glBegin(GL_TRIANGLE_FAN)
             i = -i
         else:
             glBegin(GL_TRIANGLE_STRIP)
+  
 
-        
-        for j in m_glcmds:
+
+        for j in aux:
             if(i<=0):
                 break
             
-            l = shadedots[0][m_lightnormals[m_glcmds[k+2]]]
+            l = shadedots[0][m_lightnormals[aux[k+2]]]
 
             glColor3f( l * lcolor[0], l * lcolor[1], l * lcolor[2] )
 
-            glTexCoord2f(float(m_glcmds[k]),float(m_glcmds[k+1]))
+            glTexCoord2f(float(aux[k]),float(aux[k+1]))
 
-            glNormal3fv(anorms[m_lightnormals[m_glcmds[k+2]]])
+            glNormal3fv(anorms[m_lightnormals[aux[k+2]]])
 
-            print((m_glcmds))
-            glVertex3fv(vertlist[m_glcmds[k+2]])
+            #print(m_glcmds[k])
+            k = 1
+            glVertex3fv(vertlist[aux[k+2]])
 
             k = k + 3
             i = i-1
@@ -403,7 +413,7 @@ def UpdateTime():
     m_currentTime = GetTimeMSec()
 
     
-bAnimated = False
+bAnimated = True
 g_angle = 0.0
 angle = 0.0
 bTextured = True
@@ -461,7 +471,7 @@ def Reshape(width,height):
 
 def Init():
     
-    glClearColor(0.0,0.0,0.0,0.0)
+    glClearColor(0.0,0.0,1.0,0.0)
     glShadeModel(GL_SMOOTH)
     glEnable(GL_DEPTH_TEST)
     glEnable(GL_TEXTURE_2D)

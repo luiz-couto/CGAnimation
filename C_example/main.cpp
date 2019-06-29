@@ -8,6 +8,6 @@ int main(){
 
     CMD2Model test;
     test.LoadModel("Weapon.md2");
-
+    test.DrawFrame(0);
 
 }
