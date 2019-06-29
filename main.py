@@ -187,10 +187,14 @@ def DrawModel(time):
     glPopMatrix()
 
 def Interpolate(vertlist):
+
+    curr_v = m_vertices[num_xyz * m_anim.curr_frame:]
+    next_v = m_vertices[num_xyz * m_anim.next_frame:]
+
     for i in range(0,num_xyz):
-        vertlist[i][0] = m_vertices[ i + (num_xyz * m_anim.curr_frame) ][0] * m_scale
-        vertlist[i][1] = m_vertices[ i + (num_xyz * m_anim.curr_frame) ][1] * m_scale
-        vertlist[i][2] = m_vertices[ i + (num_xyz * m_anim.curr_frame) ][2] * m_scale
+        vertlist[i][0] = (curr_v[i][0] + m_anim.interpol * (next_v[i][0] - curr_v[i][0])) * m_scale
+        vertlist[i][1] = (curr_v[i][1] + m_anim.interpol * (next_v[i][1] - curr_v[i][1])) * m_scale
+        vertlist[i][2] = (curr_v[i][2] + m_anim.interpol * (next_v[i][2] - curr_v[i][2])) * m_scale
 
     return vertlist
 
@@ -342,13 +346,27 @@ def Animate(time):
         
         m_anim.old_time = m_anim.curr_time
     
-    if( m_anim.curr_frame > (num_frames - 1) )
+    if( m_anim.curr_frame > (num_frames - 1) ):
         m_anim.curr_frame = 0
     
-    if( m_anim.next_frame > (num_frames - 1) )
+    if( m_anim.next_frame > (num_frames - 1) ):
         m_anim.next_frame = 0
 
     m_anim.interpol = m_anim.fps * (m_anim.curr_time - m_anim.old_time)
+
+
+def DrawFrame(frame):
+    global m_anim
+    #set new animation parameters...
+    m_anim.startframe   = frame
+    m_anim.endframe     = frame
+    m_anim.next_frame   = frame
+    m_anim.fps          = 1
+    m_anim._type        = -1
+
+    #draw the model
+    DrawModel( 1.0 )
+
 
 
 def main():
@@ -357,6 +375,7 @@ def main():
     m_texid = LoadSkin("Weapon.pcx")
     PopulateAnorms("anorms.txt")
     PopulateAnormsDots("anormtab.txt")
+    
     
     
 main()
