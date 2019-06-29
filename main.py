@@ -184,6 +184,7 @@ def LoadSkin(filename):
     return textureID
 
 def DrawModel(time):
+    print(time)
     if(time > 0.0):
         Animate(time)
     
@@ -194,6 +195,10 @@ def DrawModel(time):
 
     RenderFrame()
     glPopMatrix()
+
+def ScaleModel(s):
+    global m_scale
+    m_scale = s
 
 def Interpolate(vertlist):
 
@@ -206,8 +211,8 @@ def Interpolate(vertlist):
        #vertlist[i][2] = (curr_v[i][2] + m_anim.interpol * (next_v[i][2] - curr_v[i][2])) * m_scale
 
     for i in range(0,num_xyz):
-        vertlist.append([(curr_v[i][0] + m_anim.interpol * (next_v[i][0] - curr_v[i][0])) * m_scale,(curr_v[i][1] + m_anim.interpol * (next_v[i][1] - curr_v[i][1])) * m_scale,(curr_v[i][2] + m_anim.interpol * (next_v[i][2] - curr_v[i][2])) * m_scale])
-
+        x = [(curr_v[i][0] + m_anim.interpol * (next_v[i][0] - curr_v[i][0])) * m_scale,(curr_v[i][1] + m_anim.interpol * (next_v[i][1] - curr_v[i][1])) * m_scale,(curr_v[i][2] + m_anim.interpol * (next_v[i][2] - curr_v[i][2])) * m_scale]
+        vertlist.append(x)
 
     return vertlist
 
@@ -284,6 +289,7 @@ def RenderFrame():
 
     k = 1
     for i in aux:
+        print(i)
         if(i < 0):
             glBegin(GL_TRIANGLE_FAN)
             i = -i
@@ -414,10 +420,10 @@ def UpdateTime():
 
     
 bAnimated = True
-g_angle = 0.0
-angle = 0.0
+g_angle = 1.0
+angle = 2.0
 bTextured = True
-bLighGL	= False
+bLighGL	= True
 
 
 def Display():
@@ -471,7 +477,7 @@ def Reshape(width,height):
 
 def Init():
     
-    glClearColor(0.0,0.0,1.0,0.0)
+    glClearColor(0.0,0.0,0.0,0.0)
     glShadeModel(GL_SMOOTH)
     glEnable(GL_DEPTH_TEST)
     glEnable(GL_TEXTURE_2D)
@@ -487,10 +493,10 @@ def Init():
     SetAnim( 0 )
     glDisable(GL_LIGHTING)
     glEnable(GL_LIGHT0)
-    #ScaleModel(0.25) < --- DONT FORGET
+    ScaleModel(0.25)
     
-    lightpos = (10.0,10.0,100.0)
-    lightcolor = (1.0,1.0,1.0,1.0)
+    lightpos = [10.0,10.0,100.0]
+    lightcolor = [1.0,1.0,1.0,1.0]
 
     glLightfv( GL_LIGHT0, GL_POSITION, lightpos )
     glLightfv( GL_LIGHT0, GL_DIFFUSE, lightcolor )
@@ -518,6 +524,7 @@ def main():
     glutCreateWindow( "CG Animation" )
 
     Init()
+
 
     glutReshapeFunc( Reshape )
     glutDisplayFunc( Display )
