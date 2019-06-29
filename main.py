@@ -8,16 +8,19 @@ import re
 
 NUMVERTEXNORMALS = 162
 SHADEOUT_QUANT = 16
+MAX_ANIMATIONS = 22
 anorms = []
 anorms_dots = []
 
 m_vertices      = []
-m_glcmds        = 0
+m_glcmds        = []
 m_lightnormals  = []
 
 num_frames      = 0
 num_xyz         = 0
 num_glcmds      = 0
+
+animlist = []
 
 m_texid         = 0
 m_scale         = 1.0
@@ -75,6 +78,29 @@ class frame_t:
             self.verts.append(vertex)
             aux = aux + 4
 
+class anim_t:
+    def __init__(self,first,last,fps):
+        self.first_frame = first
+        self.last_frame = last
+        self.fps = fps
+
+class animState_t:
+    def __init__(self):
+        self.startframe = 0
+        self.endframe = 0
+        self.fps = 0
+
+        self.curr_time = 0.0
+        self.old_time = 0.0
+        self.interpol = 0.0
+
+        self._type = 0
+
+        self.curr_frame = 0
+        self.next_frame = 0
+
+
+
 def LoadModel(filename):
    
     f = open(filename,"rb")
@@ -100,6 +126,7 @@ def LoadModel(filename):
     # Read file data
     #buffer = content[header.ofs_frames:num_frames*header.framesize]
     buffer = content[header.ofs_frames:header.ofs_frames+(num_frames*header.framesize)]
+    global m_glcmds
     m_glcmds = content[header.ofs_glcmds:header.ofs_glcmds+num_glcmds*4]
     
     
@@ -148,6 +175,9 @@ def LoadSkin(filename):
     return textureID
 
 def DrawModel(time):
+    if(time > 0.0):
+        Animate(time)
+    
     glPushMatrix()
     
     glRotatef(-90.0, 1.0, 0.0, 0.0)
@@ -162,6 +192,10 @@ def Interpolate(vertlist):
         vertlist[i][1] = m_vertices[ i + (num_xyz * m_anim.curr_frame) ][1] * m_scale
         vertlist[i][2] = m_vertices[ i + (num_xyz * m_anim.curr_frame) ][2] * m_scale
 
+    return vertlist
+
+
+
 def PopulateAnorms(filename):
     f = open(filename,"r")
     content = f.readlines()
@@ -173,7 +207,6 @@ def PopulateAnormsDots(filename):
     f = open(filename,"r")
     content = f.read()
     global anorms_dots
-    #anorms_dots = re.split('{ | } ',content)
     aux = content.split('\n')
 
     for j in range(0,SHADEOUT_QUANT):
@@ -199,13 +232,123 @@ shadedots = anorms_dots[0:]
 def ProcessLighting():
     lightvar = (g_shadelight + g_ambientlight)/256.0
 
+    global lcolor
     lcolor[0] = (g_lightcolor[0]*lightvar)
     lcolor[1] = (g_lightcolor[1]*lightvar)
     lcolor[2] = (g_lightcolor[2]*lightvar)
 
     global shadedots
-    shadedots = anorms_dots[(g_angle * (SHADEOUT_QUANT / 360.0)) & (SHADEOUT_QUANT - 1):]
+    shadedots = anorms_dots[int((g_angle * (SHADEOUT_QUANT / 360.0))) & (SHADEOUT_QUANT - 1):]
+
+
+def RenderFrame():
+    vertlist = []
+
+    # Reverse the orientation of front-facing
+    glPushAttrib(GL_POLYGON_BIT)
+    glFrontFace(GL_CW)
+   
+    # Enable backface culling
+    glEnable(GL_CULL_FACE)
+    glCullFace(GL_BACK)
+
+    ProcessLighting()
+
+    vertlist = Interpolate(vertlist)
+
+    glBindTexture(GL_TEXTURE_2D,m_texid)
+
+    k = 0
+    for i in m_glcmds:
+        if(i < 0):
+            glBegin(GL_TRIANGLE_FAN)
+            i = -i
+        else:
+            glBegin(GL_TRIANGLE_STRIP)
+
+        
+        for j in m_glcmds:
+            if(i<=0):
+                break
+            l = shadedots[m_lightnormals[m_glcmds[k+2]]]
+
+            glColor3f( l * lcolor[0], l * lcolor[1], l * lcolor[2] )
+
+            glTexCoord2f(float(m_glcmds[k]),float(m_glcmds[k+1]))
+
+            glNormal3fv(anorms[m_lightnormals[m_glcmds[k+2]]])
+
+            glVertex3fv(vertlist[m_glcmds[k+2]])
+
+            k = k + 3
+            i = i-1
+        
+        glEnd()
+
+    glDisable(GL_CULL_FACE)
+    glPopAttrib()
+
+def animlist():
+    global animlist
+    animlist = [
+        anim_t(0,39,9),
+        anim_t(40,45,10),
+        anim_t(46,53,10),
+        anim_t(54,57,7),
+        anim_t(58,61,7),
+        anim_t(62,65,7),
+        anim_t(66,71,7),
+        anim_t(72,83,7),
+        anim_t(84,94,7),
+        anim_t(95,111,10),
+        anim_t(112,122,7),
+        anim_t(123,134,6),
+        anim_t(135,153,10),
+        anim_t(154,159,7),
+        anim_t(160,168,10),
+        anim_t(196,172,7),
+        anim_t(173,177,5),
+        anim_t(178,183,7),
+        anim_t(184,189,7),
+        anim_t(190,197,7),
+        anim_t(198,198,5)
+    ]
+
+m_anim = animState_t()
+
+def SetAnim(_type):
+    global m_anim
+    if(_type < 0) or (_type > MAX_ANIMATIONS):
+        _type = 0
     
+    m_anim.startframe   = animlist[ _type ].first_frame
+    m_anim.endframe     = animlist[ _type ].last_frame
+    m_anim.next_frame   = animlist[ _type ].first_frame + 1
+    m_anim.fps          = animlist[ _type ].fps
+    m_anim._type        = _type
+
+
+def Animate(time):
+    global m_anim
+    m_anim.curr_time = time
+
+    if(m_anim.curr_time - m_anim.old_time > (1.0/m_anim.fps)):
+        
+        m_anim.curr_frame = m_anim.next_frame
+        m_anim.next_frame = m_anim.next_frame + 1
+
+        if(m_anim.next_frame > m_anim.endframe):
+            m_anim.next_frame = m_anim.startframe
+        
+        m_anim.old_time = m_anim.curr_time
+    
+    if( m_anim.curr_frame > (num_frames - 1) )
+        m_anim.curr_frame = 0
+    
+    if( m_anim.next_frame > (num_frames - 1) )
+        m_anim.next_frame = 0
+
+    m_anim.interpol = m_anim.fps * (m_anim.curr_time - m_anim.old_time)
 
 
 def main():
@@ -214,5 +357,6 @@ def main():
     m_texid = LoadSkin("Weapon.pcx")
     PopulateAnorms("anorms.txt")
     PopulateAnormsDots("anormtab.txt")
+    
     
 main()
