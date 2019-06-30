@@ -175,12 +175,16 @@ def LoadSkin(filename):
     imageData = numpy.array(list(image.getdata()), numpy.uint8)
 
     textureID = glGenTextures(1)
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4)
     glBindTexture(GL_TEXTURE_2D, textureID)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.size[0], image.size[1],
-        0, GL_RGB, GL_UNSIGNED_BYTE, imageData)
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT )
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT )
+
+    gluBuild2DMipmaps( GL_TEXTURE_2D, GL_RGBA, image.size[0], image.size[1], GL_RGBA, GL_UNSIGNED_BYTE, imageData )
+
+    print(imageData)
 
     image.close()
     return textureID
@@ -305,7 +309,7 @@ def RenderFrame():
             k = k+1
             l = shadedots[0][m_lightnormals[aux[k+2]]]
             glColor3f( l * lcolor[0], l * lcolor[1], l * lcolor[2] )
-            glTexCoord2f(float(aux[k]),float(aux[k+1]))
+            glTexCoord2f(ctypes.c_float(aux[k]).value,ctypes.c_float(aux[k+1]).value)
             glNormal3fv(anorms[m_lightnormals[aux[k+2]]])
             glVertex3fv(vertlist[aux[k+2]])
             k = k + 2
@@ -346,6 +350,7 @@ def PopulateAnimlist():
     ]
 
 m_anim = animState_t()
+c_anim = 0
 
 def SetAnim(_type):
     global m_anim
@@ -472,6 +477,69 @@ def Reshape(width,height):
 	glMatrixMode( GL_MODELVIEW )
 	glLoadIdentity()
 
+def to8(string):
+    return as_8_bit(string)
+
+def ChangeAnim():
+    global c_anim
+    c_anim = c_anim + 1
+    if(c_anim == 20):
+        c_anim = 0
+    SetAnim( c_anim )
+
+
+def Keyboard(key,x,y):
+    global bAnimated
+    global bLighGL
+    global bTextured
+
+
+    if (key == to8('a') or key == to8('A')):
+        bAnimated =  not bAnimated
+    elif (key == to8('l') or key == to8('L')):
+        bLighGL = not bLighGL
+        if(bLighGL):
+            glEnable(GL_LIGHTING)
+        else:
+            glDisable(GL_LIGHTING)
+       
+    elif (key == to8('p') or key == to8('P')):
+        glPolygonMode( GL_FRONT_AND_BACK, GL_POINT )
+        
+    elif(key == to8('s') or key == to8('S')):
+        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
+        
+    elif(key == to8('t') or key == to8('T')):
+        bTextured = not bTextured
+        if(bTextured):
+            glEnable(GL_TEXTURE_2D)
+        else:
+            glDisable(GL_TEXTURE_2D)
+        
+    elif(key == to8('w') or key == to8('W')):
+        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
+    elif(key == to8('c') or key == to8('C')):
+        ChangeAnim()
+    
+
+        
+
+def Special(key,x,y):
+
+    global angle
+    global g_angle
+
+    if (key == GLUT_KEY_LEFT):
+        angle -= 5.0
+    elif (key == GLUT_KEY_RIGHT):
+        angle += 5.0
+    elif (key == GLUT_KEY_UP):
+        g_angle -= 10.0
+    elif(key == GLUT_KEY_DOWN):
+        g_angle += 10.0
+       
+
+
 def Init():
     
     glClearColor(0.0,0.0,0.0,0.0)
@@ -487,7 +555,7 @@ def Init():
     PopulateAnormsDots("anormtab.txt")
     PopulateAnimlist()
 
-    SetAnim( 0 )
+    SetAnim( c_anim )
     glDisable(GL_LIGHTING)
     glEnable(GL_LIGHT0)
     ScaleModel(0.25)
@@ -514,7 +582,8 @@ def main():
 
     Init()
 
-
+    glutKeyboardFunc( Keyboard )
+    glutSpecialFunc( Special )
     glutReshapeFunc( Reshape )
     glutDisplayFunc( Display )
 
