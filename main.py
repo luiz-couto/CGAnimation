@@ -5,6 +5,8 @@ from PIL import Image
 import numpy
 import re
 
+import ctypes
+
 import OpenGL.GL.shaders
 import glfw
 import glm
@@ -184,7 +186,7 @@ def LoadSkin(filename):
     return textureID
 
 def DrawModel(time):
-    print(time)
+    #print(time)
     if(time > 0.0):
         Animate(time)
     
@@ -285,42 +287,37 @@ def RenderFrame():
     for d in range(int(len(m_glcmds)/4)):
         aux.append(int.from_bytes(m_glcmds[c:c+4],"little"))
         c = c+4
+    #print(aux)
 
 
-    k = 1
-    for i in aux:
-        print(i)
+    k = 0
+    i = ctypes.c_int(aux[k]).value
+    
+    while(i != 0):
+        
+        if(i > 0):
+            glBegin(GL_TRIANGLE_STRIP)
         if(i < 0):
             glBegin(GL_TRIANGLE_FAN)
             i = -i
-        else:
-            glBegin(GL_TRIANGLE_STRIP)
-  
-
-
-        for j in aux:
-            if(i<=0):
-                break
-            
-            l = shadedots[0][m_lightnormals[aux[k+2]]]
-
-            glColor3f( l * lcolor[0], l * lcolor[1], l * lcolor[2] )
-
-            glTexCoord2f(float(aux[k]),float(aux[k+1]))
-
-            glNormal3fv(anorms[m_lightnormals[aux[k+2]]])
-
-            #print(m_glcmds[k])
-            k = 1
-            glVertex3fv(vertlist[aux[k+2]])
-
-            k = k + 3
-            i = i-1
         
+        for j in range(0,i):
+            k = k+1
+            l = shadedots[0][m_lightnormals[aux[k+2]]]
+            glColor3f( l * lcolor[0], l * lcolor[1], l * lcolor[2] )
+            glTexCoord2f(float(aux[k]),float(aux[k+1]))
+            glNormal3fv(anorms[m_lightnormals[aux[k+2]]])
+            glVertex3fv(vertlist[aux[k+2]])
+            k = k + 2
+
+        k = k + 1
         glEnd()
+        i = ctypes.c_int(aux[k]).value
 
     glDisable(GL_CULL_FACE)
-    glPopAttrib()
+    glPopAttrib()        
+
+
 
 def PopulateAnimlist():
     global animlist
@@ -483,9 +480,9 @@ def Init():
     glEnable(GL_TEXTURE_2D)
  
     InitializeTime()
-    LoadModel("Weapon.md2")
+    LoadModel("Ogros.md2")
     global m_texid
-    m_texid = LoadSkin("Weapon.pcx")
+    m_texid = LoadSkin("igdosh.pcx")
     PopulateAnorms("anorms.txt")
     PopulateAnormsDots("anormtab.txt")
     PopulateAnimlist()
@@ -503,14 +500,6 @@ def Init():
     glLightfv( GL_LIGHT0, GL_SPECULAR, lightcolor )
 
 
-
-
-def _main():
-    LoadModel("Weapon.md2")
-    global m_texid
-    m_texid = LoadSkin("Weapon.pcx")
-    PopulateAnorms("anorms.txt")
-    PopulateAnormsDots("anormtab.txt")
 
 def main():
     

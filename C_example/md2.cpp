@@ -131,7 +131,9 @@ bool CMD2Model::LoadModel( const char *filename )
 	// read opengl commands...
 	file.seekg( header.ofs_glcmds, std::ios::beg );
 	file.read( (char *)m_glcmds, num_glcmds * sizeof( int ) );
-
+	// for(int w = 0;w<num_glcmds;w++){
+	// 	std::cout << m_glcmds[w] << std::endl;
+	// }
 	/////////////////////////////////////////////
 
 	frame_t *test = (frame_t *)&buffer[ header.framesize * 0 ];
@@ -155,7 +157,7 @@ bool CMD2Model::LoadModel( const char *filename )
 	}
 
 	frame		= (frame_t *)&buffer[ header.framesize * 0 ];
-	std::cout << m_glcmds[2] << std::endl;
+	//std::cout << m_glcmds[2] << std::endl;
 
 
 
@@ -196,7 +198,8 @@ void CMD2Model::DrawFrame( int frame )
 
 	// draw each triangle!
 	while( int i = *(ptricmds++) )
-	{
+	{	
+		std::cout << i << std::endl;
 		if( i < 0 )
 		{
 			//glBegin( GL_TRIANGLE_FAN );
@@ -227,7 +230,7 @@ void CMD2Model::DrawFrame( int frame )
 			//glNormal3fv( anorms[ m_lightnormals[ ptricmds[2] ] ] );
 
 			// draw the vertex
-			std::cout << ptricmds[2]  << std::endl;
+			//std::cout << ptricmds[2]  << std::endl;
 		}
 
 		//glEnd();
