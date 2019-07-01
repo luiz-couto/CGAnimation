@@ -1,20 +1,12 @@
 from OpenGL.GL import *
-import sys
+from OpenGL.GLU import *
+from OpenGL.GLUT import *
 import struct
 from PIL import Image
 import numpy
-import re
-from codecs import decode
-
 import ctypes
 
-import OpenGL.GL.shaders
-import glfw
-import glm
-from OpenGL.GLU import *
-from OpenGL.GLUT import *
-
-
+# Set/Initialize some global variables
 NUMVERTEXNORMALS = 162
 SHADEOUT_QUANT = 16
 MAX_ANIMATIONS = 22
@@ -136,7 +128,6 @@ def LoadModel(filename):
     num_glcmds = header.num_glcmds
 
     # Read file data
-    #buffer = content[header.ofs_frames:num_frames*header.framesize]
     buffer = content[header.ofs_frames:header.ofs_frames+(num_frames*header.framesize)]
     global m_glcmds
     m_glcmds = content[header.ofs_glcmds:header.ofs_glcmds+num_glcmds*4]
@@ -145,34 +136,29 @@ def LoadModel(filename):
     
     global m_vertices
     global m_lightnormals
-
     
-    #frame = frame_t(buffer[header.framesize * 0:])
-    #print(float(frame.scale[0])*frame.verts[0].v[0] + frame.translate[0])
-   
-   
+    # Set m_vertices and m_lightnormals
     for j in range(0,num_frames):
         frame = frame_t(buffer[header.framesize * j:])
         for i in range(0,num_xyz):
             m_vertices.append([((frame.verts[i].v[0] * frame.scale[0]) + frame.translate[0]),((frame.verts[i].v[1] * frame.scale[1]) + frame.translate[1]),((frame.verts[i].v[2] * frame.scale[2]) + frame.translate[2])])
             m_lightnormals.append(frame.verts[i].lightnormalindex)
             
-    #print(m_vertices[78][0])
-    #print(frame.verts[5].v)
-
+    
+# The function below still doesn't work ;(
 def LoadSkin(filename):
-    # this function: credits to http://www.magikcode.com/?p=122
+
     # PIL can open BMP, EPS, FIG, IM, JPEG, MSP, PCX, PNG, PPM
     # and other file types.  We convert into a texture using GL.
-    print('trying to open', filename)
+    #print('trying to open', filename)
     try:
         image = Image.open(filename)
     except IOError as ex:
-        print('IOError: failed to open texture file')
+        #print('IOError: failed to open texture file')
         message = template.format(type(ex).__name__, ex.args)
-        print(message)
+        #print(message)
         return -1
-    print('opened file: size=', image.size, 'format=', image.format)
+    #print('opened file: size=', image.size, 'format=', image.format)
     imageData = numpy.array(list(image.getdata()), numpy.uint8)
 
     textureID = glGenTextures(1)
@@ -188,6 +174,7 @@ def LoadSkin(filename):
     
     #image.close()
     return textureID
+
 
 def DrawModel(time):
     #print(time)
@@ -206,15 +193,12 @@ def ScaleModel(s):
     global m_scale
     m_scale = s
 
+
+# Make the interpolation between the keyframes
 def Interpolate(vertlist):
 
     curr_v = m_vertices[num_xyz * m_anim.curr_frame:]
     next_v = m_vertices[num_xyz * m_anim.next_frame:]
-
-    #for i in range(0,num_xyz):
-       #vertlist[i][0] = (curr_v[i][0] + m_anim.interpol * (next_v[i][0] - curr_v[i][0])) * m_scale
-       #vertlist[i][1] = (curr_v[i][1] + m_anim.interpol * (next_v[i][1] - curr_v[i][1])) * m_scale
-       #vertlist[i][2] = (curr_v[i][2] + m_anim.interpol * (next_v[i][2] - curr_v[i][2])) * m_scale
 
     for i in range(0,num_xyz):
         x = [(curr_v[i][0] + m_anim.interpol * (next_v[i][0] - curr_v[i][0])) * m_scale,(curr_v[i][1] + m_anim.interpol * (next_v[i][1] - curr_v[i][1])) * m_scale,(curr_v[i][2] + m_anim.interpol * (next_v[i][2] - curr_v[i][2])) * m_scale]
@@ -223,7 +207,7 @@ def Interpolate(vertlist):
     return vertlist
 
 
-
+# Set the anorms vector from the anorms.txt file
 def PopulateAnorms(filename):
     f = open(filename,"r")
     content = f.readlines()
@@ -231,6 +215,7 @@ def PopulateAnorms(filename):
     for i in range(0,NUMVERTEXNORMALS):
         anorms.append([float(content[i][2:11]),float(content[i][14:23]),float(content[i][26:35])])
 
+# Set the anormsDots vector from the anormtab.txt file
 def PopulateAnormsDots(filename):
     f = open(filename,"r")
     content = f.read()
@@ -249,7 +234,7 @@ def PopulateAnormsDots(filename):
             k = k+4
         anorms_dots.append(y)
         
-
+# Set some global variables
 g_lightcolor = [1.0,1.0,1.0]
 g_ambientlight = 32
 g_shadelight = 128
@@ -257,6 +242,7 @@ g_angle = 0.0
 lcolor = [0,0,0]
 shadedots = anorms_dots[0:]
 
+# Process the lightning
 def ProcessLighting():
     lightvar = (g_shadelight + g_ambientlight)/256.0
 
@@ -268,7 +254,7 @@ def ProcessLighting():
     global shadedots
     shadedots = anorms_dots[int((g_angle * (SHADEOUT_QUANT / 360.0))) & (SHADEOUT_QUANT - 1):]
 
-
+# Converts an int of python into a float in IEE 754 
 def IntToFloat(number):
     s = bin(number)
     q = int(s,0)
@@ -304,6 +290,7 @@ def RenderFrame():
     k = 0
     i = ctypes.c_int(aux[k]).value
     
+    # Process each vertex
     while(i != 0):
         
         if(i > 0):
@@ -329,7 +316,7 @@ def RenderFrame():
     glPopAttrib()        
 
 
-
+# Set the animations types
 def PopulateAnimlist():
     global animlist
     animlist = [
@@ -406,7 +393,7 @@ def DrawFrame(frame):
     #draw the model
     DrawModel( 1.0 )
 
-
+# Some functions to get time
 def GetTimeMSec():
     return glutGet( GLUT_ELAPSED_TIME )
 
@@ -428,13 +415,14 @@ def UpdateTime():
     m_currentTime = GetTimeMSec()
 
     
+# More global variables
 bAnimated = True
 g_angle = 1.0
 angle = 2.0
 bTextured = True
 bLighGL	= True
 
-
+# Function called every time to set some config and call the DrawModel()
 def Display():
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -484,9 +472,11 @@ def Reshape(width,height):
 	glMatrixMode( GL_MODELVIEW )
 	glLoadIdentity()
 
+# Converts an string in python to an 8 bit one (used in keyboard function)
 def to8(string):
     return as_8_bit(string)
 
+# Function to change the animation
 def ChangeAnim():
     global c_anim
     c_anim = c_anim + 1
@@ -494,7 +484,7 @@ def ChangeAnim():
         c_anim = 0
     SetAnim( c_anim )
 
-
+# Define what the keyboard keys(some of them) should do
 def Keyboard(key,x,y):
     global bAnimated
     global bLighGL
@@ -530,7 +520,7 @@ def Keyboard(key,x,y):
     
 
         
-
+# Define what the arrow keys should do
 def Special(key,x,y):
 
     global angle
@@ -546,7 +536,7 @@ def Special(key,x,y):
         g_angle += 10.0
        
 
-
+# Initial configurantion 
 def Init():
     
     glClearColor(0.0,0.0,0.0,0.0)
@@ -575,9 +565,14 @@ def Init():
     glLightfv( GL_LIGHT0, GL_SPECULAR, lightcolor )
 
 
-
+# Main !
 def main():
-    
+
+    print("\n--------------------------------------------------------\n\n\n                       CG ANIMATION\n\n\n--------------------------------------------------------\n")
+    print("Animação carregada com sucesso! Utilize os comandos abaixo para mudar algumas configurações e ver diferentes animações:\n")
+    print("C -> Change animation\nW -> Wireframe View\nS -> Solid View (padrão)\nP -> Points View\nA -> Stop/Run animation\nL -> Enable/Disable lighting\nArrow key UP/DOWN -> Change the shadow\nArrow key RIGHT/LEFT -> Rotate the object\n")
+    print("\nPara entrar na página do projeto, basta acessar:\n\nhttps://github.com/luiz-couto/CGAnimation\n\n")
+
     glutInit(sys.argv)
     glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH )
 
