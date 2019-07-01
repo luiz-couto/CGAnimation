@@ -4,6 +4,7 @@ import struct
 from PIL import Image
 import numpy
 import re
+from codecs import decode
 
 import ctypes
 
@@ -175,18 +176,17 @@ def LoadSkin(filename):
     imageData = numpy.array(list(image.getdata()), numpy.uint8)
 
     textureID = glGenTextures(1)
-    glBindTexture(GL_TEXTURE_2D, textureID)
+    #glBindTexture(GL_TEXTURE_2D, textureID)
+    
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT )
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT )
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
 
     gluBuild2DMipmaps( GL_TEXTURE_2D, GL_RGBA, image.size[0], image.size[1], GL_RGBA, GL_UNSIGNED_BYTE, imageData )
-
-    print(imageData)
-
-    image.close()
+    
+    #image.close()
     return textureID
 
 def DrawModel(time):
@@ -269,6 +269,13 @@ def ProcessLighting():
     shadedots = anorms_dots[int((g_angle * (SHADEOUT_QUANT / 360.0))) & (SHADEOUT_QUANT - 1):]
 
 
+def IntToFloat(number):
+    s = bin(number)
+    q = int(s,0)
+    b8 = struct.pack('<i',q)
+    f = struct.unpack('<f',b8)[0]
+    return f
+
 def RenderFrame():
     vertlist = []
 
@@ -284,6 +291,7 @@ def RenderFrame():
 
     vertlist = Interpolate(vertlist)
 
+    global m_texid
     glBindTexture(GL_TEXTURE_2D,m_texid)
 
     c = 0
@@ -291,7 +299,6 @@ def RenderFrame():
     for d in range(int(len(m_glcmds)/4)):
         aux.append(int.from_bytes(m_glcmds[c:c+4],"little"))
         c = c+4
-    #print(aux)
 
 
     k = 0
@@ -309,7 +316,7 @@ def RenderFrame():
             k = k+1
             l = shadedots[0][m_lightnormals[aux[k+2]]]
             glColor3f( l * lcolor[0], l * lcolor[1], l * lcolor[2] )
-            glTexCoord2f(ctypes.c_float(aux[k]).value,ctypes.c_float(aux[k+1]).value)
+            glTexCoord2f(IntToFloat(aux[k]),IntToFloat(aux[k+1]))
             glNormal3fv(anorms[m_lightnormals[aux[k+2]]])
             glVertex3fv(vertlist[aux[k+2]])
             k = k + 2
@@ -548,11 +555,11 @@ def Init():
     glEnable(GL_TEXTURE_2D)
  
     InitializeTime()
-    LoadModel("Ogros.md2")
+    LoadModel("Models/Ogros.md2")
     global m_texid
-    m_texid = LoadSkin("igdosh.pcx")
-    PopulateAnorms("anorms.txt")
-    PopulateAnormsDots("anormtab.txt")
+    m_texid = LoadSkin("Models/igdosh.pcx")
+    PopulateAnorms("lib/anorms.txt")
+    PopulateAnormsDots("lib/anormtab.txt")
     PopulateAnimlist()
 
     SetAnim( c_anim )
