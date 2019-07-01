@@ -51,15 +51,15 @@ A implementação desse projeto foi feito em python e tem como principal referê
 O tutorial acima implementa as funcionalidades em C++, e nele é possível encontrar melhores explicações e mais detalhes sobre cada uma das classes e funções definidas no projeto.
 ## Classes
 Foram definidas algumas classes, e segue aqui uma breve explicação de cada uma:
-# md2_t
+## md2_t
 Essa classe é responsável por definir propriedades do arquivo .md2 a partir da leitura de seu header. A partir do começo do arquivo, a cada 4 bits é definida uma propriedade, por isso os índices "pulam" de 4 em 4.
-# vertex_t
+## vertex_t
 Define, para cada vértice, suas coordenadas e também o index de sua normal.
-# frame_t
+## frame_t
 Define propriedades de cada frame(scale,translate,name e os vértices respectivos). Mesma lógica que ocorre aqui ocorre na classe md2_t.
-# anim_t
+## anim_t
 Define algumas propriedades de cada etapa da animação(primeira e última frame, além do fps)
-# animState_t
+## animState_t
 Define propriedades da animação como um todo.
 
 ## Funções
